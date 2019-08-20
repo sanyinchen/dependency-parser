@@ -81,15 +81,15 @@ public class ThreadDisPatchManager<T, O> {
      *
      * @param job
      */
-    public void createWhenIdle(T job) {
+    public synchronized void createWhenIdle(T job) {
         create(job);
     }
 
-    private void create() {
+    private synchronized void create() {
         if (!blockingJobs.isEmpty()) {
             create(blockingJobs.poll());
         } else {
-            if (livingThreadSize() == 0) {
+            if (livingThreadSize() == 0 && blockingJobs.isEmpty()) {
                 callback.onFinished(mFinishedPairs, mInterruptPairs);
             }
         }

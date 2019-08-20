@@ -10,9 +10,9 @@ import com.sanyinchen.parser.CodeDependencyParser;
  * @since 19-8-20
  */
 
-public class Foo {
+public class FooFullJar {
     public static void main(String[] args) {
         CodeDependencyParser codeDependencyParser = new CodeDependencyParser();
-        codeDependencyParser.parse("./input-test/lib-a-1.0-SNAPSHOT.jar");
+        codeDependencyParser.parse("./input-test/lib-a-1.0-SNAPSHOT.jar","./input-test/lib-b-1.0-SNAPSHOT.jar");
     }
 }

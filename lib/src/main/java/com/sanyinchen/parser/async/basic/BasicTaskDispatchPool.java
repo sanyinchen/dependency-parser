@@ -17,7 +17,7 @@ public abstract class BasicTaskDispatchPool<T, O> {
 
 
     private static final int JOB_MAX_TASKS = 10;
-    private ThreadDisPatchManager<T, O> mThreadPool;
+    private volatile ThreadDisPatchManager<T, O> mThreadPool;
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
 
     /**

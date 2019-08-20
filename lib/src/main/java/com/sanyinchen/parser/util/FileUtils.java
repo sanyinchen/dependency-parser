@@ -159,6 +159,22 @@ public final class FileUtils {
         return new File(path).exists();
     }
 
+    public static void delExistedFile(@NotNull String path) {
+        File file = new File(path);
+        if (isExisted(file.getPath())) {
+            if (file.isDirectory()) {
+                try {
+                    org.apache.commons.io.FileUtils.deleteDirectory(file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                file.delete();
+            }
+
+        }
+    }
+
 
     public static void jarDecompress(@NotNull String jarPath, @NotNull String outputPath) {
         File jarDir = new File(jarPath);

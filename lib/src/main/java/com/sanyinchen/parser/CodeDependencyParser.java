@@ -5,6 +5,9 @@ import com.sanyinchen.parser.async.basic.ThreadDisPatchManager;
 import com.sanyinchen.parser.async.common.Pair;
 import com.sanyinchen.parser.lexer.CodeLexerParser;
 import com.sanyinchen.parser.lexer.exceptions.ParseTreeProcessorException;
+import com.sanyinchen.parser.property.java.JavaNodeUtil;
+import com.sanyinchen.parser.property.java.JavaTree;
+import com.sanyinchen.parser.tree.ParseTreeNode;
 import com.sanyinchen.parser.util.FileFinderUtil;
 import com.sanyinchen.parser.util.FileUtils;
 import com.sun.istack.internal.NotNull;
@@ -22,7 +25,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by sanyinchen on 19-8-20.
@@ -35,32 +42,32 @@ import java.util.List;
 public class CodeDependencyParser {
     private boolean useCache = false;
     private String cachePath = ".cache";
+    private String astDir = cachePath + File.separator + "asts";
+    private String jarFilesPath = cachePath + File.separator + "classes";
 
     public void parse(@NotNull String... jarPaths) {
         CodeDependencyParserAsync codeDependencyParserAsync = new CodeDependencyParserAsync();
 
+        FileUtils.delExistedFile(cachePath);
         List<String> classesPath = new ArrayList<>();
-        String jarFilesPath = cachePath + File.separator + "classes";
         File classesDir = new File(jarFilesPath);
-        if (classesDir.exists()) {
-            classesDir.delete();
-        }
         try {
-            String jarPath = jarPaths[0];
-            //for (String jarPath : jarPaths) {
-            File jar = new File(jarPath);
-            if (!jar.exists() || !jar.isFile()) {
-                throw new IllegalArgumentException("jar path is not valid");
+
+            for (String jarPath : jarPaths) {
+                File jar = new File(jarPath);
+                if (!jar.exists() || !jar.isFile()) {
+                    throw new IllegalArgumentException("jar path is not valid");
+                }
+                FileUtils.jarDecompress(jarPath, classesDir.getPath());
+                classesPath.addAll(FileFinderUtil.createNewFinder(new File(jarFilesPath).getCanonicalPath())
+                        .classFileFind(jarFilesPath));
+
             }
-            FileUtils.jarDecompress(jarPath, classesDir.getPath());
-            classesPath.addAll(FileFinderUtil.createNewFinder().classFileFind(jarFilesPath));
-
-            //}
             System.out.println("scanned " + classesPath.size() + " .class file");
-            String classFilePath = classesPath.get(0);
-            codeDependencyParserAsync.addTask(classFilePath);
-
-
+            for (String classFilePath : classesPath) {
+                codeDependencyParserAsync.addTask(new Request(new File(jarFilesPath).getCanonicalPath(),
+                        classFilePath));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,14 +78,13 @@ public class CodeDependencyParser {
 
         private boolean useCache = false;
 
-        @Override
-        protected int getMaxThread() {
-            return 1;
-        }
 
-        @Override
-        protected int getMaxSingleThreadTask() {
-            return 1;
+        private String getAbsClassPath(String projectPath, String relativePath) {
+            String absFile = projectPath;
+            if (!absFile.endsWith(File.separator)) {
+                absFile += File.separator;
+            }
+            return absFile + relativePath;
         }
 
         @Override
@@ -96,10 +102,10 @@ public class CodeDependencyParser {
                     if (internalName == null || !internalName.equals(classFile)) {
                         return null;
                     }
-                    System.out.println("internalName:" + internalName);
+
                     InputStream is = null;
                     try {
-                        is = new FileInputStream(new File(internalName));
+                        is = new FileInputStream(new File(getAbsClassPath(parentDir, internalName)));
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -129,30 +135,53 @@ public class CodeDependencyParser {
             };
             ClassFileToJavaSourceDecompiler decompiler = new ClassFileToJavaSourceDecompiler();
             try {
-                decompiler.decompile(loader, new Printer.DefaultPrinter(), arg);
+                decompiler.decompile(loader, new Printer.DefaultPrinter(), classFile);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
             String source = decompiler.getPrinterStr();
-            try {
-                FileUtils.writeStringToFile(source, ".cache/test.txt");
-            } catch (FileExistsException e) {
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+
             String res = null;
             try {
                 res = CodeLexerParser.getInstance().parseSource(source,
                         CodeLexerParser.FileType.JAVA);
             } catch (ParseTreeProcessorException e) {
+
                 e.printStackTrace();
             }
             if (res == null || res.length() < 10) {
-                interrupt();
+                Thread.currentThread().interrupt();
             }
-            return null;
+            String astFile = "";
+            try {
+                astFile = getAbsClassPath(astDir, classFile).replace(".class", ".json");
+                // todo cache
+                FileUtils.delExistedFile(astFile);
+                FileUtils.writeStringToFile(res, astFile);
+            } catch (FileExistsException | FileNotFoundException e) {
+                // e.printStackTrace();
+            }
+            JavaTree javaTree = new JavaTree(res);
+            Pair<ParseTreeNode, Set<ParseTreeNode>> packages = javaTree.getPackageNode();
+            ParseTreeNode packageNode = packages.first;
+            Set<ParseTreeNode> importPackageNodes = packages.second;
+            Set<String> importPackages = new HashSet<>();
+            for (ParseTreeNode parseTreeNode : importPackageNodes) {
+                importPackages.add(JavaNodeUtil.INS.getEscapeImportPackageName(parseTreeNode));
+            }
+            return new Response(importPackages, JavaNodeUtil.INS.getEscapePackageName(packageNode));
+        }
+
+        private boolean contains(@NotNull Object[] packages, @NotNull String packageName) {
+            for (Object str : packages) {
+                if (!str.equals("") && packageName.startsWith(((String) str)
+                        .replaceFirst("package", "")
+                        .replace(";", ""))) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         @Override
@@ -161,7 +190,42 @@ public class CodeDependencyParser {
                 @Override
                 public void onFinished(List<Pair<Request, Response>> finishedList,
                                        List<Pair<Request, Response>> interruptedList) {
+                    if (interruptedList.size() != 0) {
+                        System.out.println("parser error in ");
+                        interruptedList.forEach(item -> {
+                            System.out.println(item.first.classFilePath);
+                        });
+                    } else {
+                        System.out.println("parser finished");
+                        Set<String> needChecked = new HashSet<>();
+                        Set<String> includePackages = new HashSet<>();
+                        for (Pair<Request, Response> pair : finishedList) {
+                            Request request = pair.first;
+                            Response response = pair.second;
+                            if (response == null) {
+                                System.out.println("parser error at : " + request.classFilePath);
+                                break;
+                            }
+                            includePackages.add(response.packageName);
+                        }
+                        for (Pair<Request, Response> pair : finishedList) {
+                            Response response = pair.second;
+                            for (String str : response.importPackages) {
+                                if (str.replaceFirst("import ", "").startsWith("java.")) {
+                                    continue;
+                                }
+                                if (contains(includePackages.toArray(), str.replaceFirst("import ", ""))) {
+                                    continue;
+                                }
+                                needChecked.add(str);
+                            }
+                        }
 
+
+                        TreeSet outTreeSet = new TreeSet(needChecked);
+                        System.out.println("you need to check : " + needChecked.size() + " group");
+                        outTreeSet.forEach(System.out::println);
+                    }
                 }
             };
         }
@@ -176,7 +240,7 @@ public class CodeDependencyParser {
 
                 @Override
                 public void onFinished(Pair<Request, Response> res) {
-
+                    System.out.println(res.first.classFilePath + " finished in " + Thread.currentThread());
                 }
             };
         }
@@ -201,9 +265,12 @@ public class CodeDependencyParser {
     }
 
     public static class Response {
-        private List<String> matchedPackages = new ArrayList<>();
-        private List<String> misMatchedPackages = new ArrayList<>();
+        private Set<String> importPackages = new HashSet<>();
         private String packageName = "";
 
+        public Response(@NotNull Set<String> importPackages, @NotNull String packageName) {
+            this.importPackages = importPackages;
+            this.packageName = packageName;
+        }
     }
 }

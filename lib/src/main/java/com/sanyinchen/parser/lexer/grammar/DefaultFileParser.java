@@ -94,16 +94,17 @@ public abstract class DefaultFileParser implements FileParserInterface {
             e.printStackTrace();
             return null;
         }
-        Set<String> msgs = el.getLog().entrySet()
-                .stream()
-                .filter(e -> e.getKey() == InmemantlrErrorListener.Type.SYNTAX_ERROR)
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toSet());
-
-
-        if (!msgs.isEmpty()) {
-            throw new ParsingException(String.join("", msgs));
-        }
+        // todo
+//        Set<String> msgs = el.getLog().entrySet()
+//                .stream()
+//                .filter(e -> e.getKey() == InmemantlrErrorListener.Type.SYNTAX_ERROR)
+//                .map(Map.Entry::getValue)
+//                .collect(Collectors.toSet());
+//
+//
+//        if (!msgs.isEmpty()) {
+//            throw new ParsingException(String.join("", msgs));
+//        }
         listener.reset();
         listener.setParser(parser);
         new ParseTreeWalker().walk(listener, data);
