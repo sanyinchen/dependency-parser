@@ -9,6 +9,7 @@ import com.sanyinchen.parser.util.FileFinderUtil;
 import com.sanyinchen.parser.util.FileUtils;
 import com.sun.istack.internal.NotNull;
 
+import org.apache.commons.io.FileExistsException;
 import org.jd.core.v1.ClassFileToJavaSourceDecompiler;
 import org.jd.core.v1.api.loader.Loader;
 import org.jd.core.v1.api.loader.LoaderException;
@@ -65,8 +66,11 @@ public class CodeDependencyParser {
         }
     }
 
-    private class CodeDependencyParserAsync extends BasicTaskDispatchPool<String,
+    private class CodeDependencyParserAsync extends BasicTaskDispatchPool<Request,
             CodeDependencyParser.Response> {
+
+        private boolean useCache = false;
+
         @Override
         protected int getMaxThread() {
             return 1;
@@ -78,7 +82,10 @@ public class CodeDependencyParser {
         }
 
         @Override
-        protected Response runTask(final String arg) {
+        protected Response runTask(final Request arg) {
+            String parentDir = arg.getParentDir();
+            String classFile = arg.getClassFilePath();
+
             //if (useCache) {
 
             //}
@@ -86,7 +93,16 @@ public class CodeDependencyParser {
             Loader loader = new Loader() {
                 @Override
                 public byte[] load(String internalName) throws LoaderException {
-                    InputStream is = this.getClass().getResourceAsStream("/" + internalName + ".class");
+                    if (internalName == null || !internalName.equals(classFile)) {
+                        return null;
+                    }
+                    System.out.println("internalName:" + internalName);
+                    InputStream is = null;
+                    try {
+                        is = new FileInputStream(new File(internalName));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
                     if (is == null) {
                         return null;
                     } else {
@@ -108,53 +124,79 @@ public class CodeDependencyParser {
 
                 @Override
                 public boolean canLoad(String internalName) {
-                    return this.getClass().getResource("/" + internalName + ".class") != null;
+                    return true;
                 }
             };
             ClassFileToJavaSourceDecompiler decompiler = new ClassFileToJavaSourceDecompiler();
             try {
-                System.out.println("1 ============>" + arg);
                 decompiler.decompile(loader, new Printer.DefaultPrinter(), arg);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            String source = decompiler.toString();
-
-            System.out.println(source);
-
-//                String res = CodeLexerParser.getInstance().parseSource(FileUtils.loadFileContent(arg),
-//                        CodeLexerParser.FileType.JAVA);
-//                if (res == null || res.length() < 10) {
-//                    interrupt();
-//                }
+            String source = decompiler.getPrinterStr();
+            try {
+                FileUtils.writeStringToFile(source, ".cache/test.txt");
+            } catch (FileExistsException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            String res = null;
+            try {
+                res = CodeLexerParser.getInstance().parseSource(source,
+                        CodeLexerParser.FileType.JAVA);
+            } catch (ParseTreeProcessorException e) {
+                e.printStackTrace();
+            }
+            if (res == null || res.length() < 10) {
+                interrupt();
+            }
             return null;
         }
 
         @Override
-        protected ThreadDisPatchManager.ThreadTaskFinished<String, Response> getFinishedCallback() {
-            return new ThreadDisPatchManager.ThreadTaskFinished<String, Response>() {
+        protected ThreadDisPatchManager.ThreadTaskFinished<Request, Response> getFinishedCallback() {
+            return new ThreadDisPatchManager.ThreadTaskFinished<Request, Response>() {
                 @Override
-                public void onFinished(List<Pair<String, Response>> finishedList,
-                                       List<Pair<String, Response>> interruptedList) {
+                public void onFinished(List<Pair<Request, Response>> finishedList,
+                                       List<Pair<Request, Response>> interruptedList) {
 
                 }
             };
         }
 
         @Override
-        protected ThreadDisPatchManager.JobTaskFinished<String, Response> getItemTaskCallback() {
-            return new ThreadDisPatchManager.JobTaskFinished<String, Response>() {
+        protected ThreadDisPatchManager.JobTaskFinished<Request, Response> getItemTaskCallback() {
+            return new ThreadDisPatchManager.JobTaskFinished<Request, Response>() {
                 @Override
-                public void onInterrupted(String inputArgs) {
+                public void onInterrupted(Request inputArgs) {
                     System.out.println(inputArgs + " parse error !!");
                 }
 
                 @Override
-                public void onFinished(Pair<String, Response> res) {
+                public void onFinished(Pair<Request, Response> res) {
 
                 }
             };
+        }
+    }
+
+    public static class Request {
+        private String parentDir = "";
+        private String classFilePath = "";
+
+        public Request(@NotNull String parentDir, @NotNull String classFilePath) {
+            this.parentDir = parentDir;
+            this.classFilePath = classFilePath;
+        }
+
+        public String getParentDir() {
+            return parentDir;
+        }
+
+        public String getClassFilePath() {
+            return classFilePath;
         }
     }
 

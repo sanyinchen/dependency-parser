@@ -129,7 +129,9 @@ public interface Printer {
 
         @Override
         public void extraLine(int count) {
-            while (count-- > 0) sb.append(NEWLINE);
+            while (count-- > 0) {
+                sb.append(NEWLINE);
+            }
         }
 
         @Override

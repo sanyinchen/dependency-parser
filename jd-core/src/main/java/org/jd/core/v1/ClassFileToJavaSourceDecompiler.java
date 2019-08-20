@@ -7,6 +7,9 @@
 
 package org.jd.core.v1;
 
+import com.sun.istack.internal.NotNull;
+import com.sun.istack.internal.Nullable;
+
 import org.jd.core.v1.api.Decompiler;
 import org.jd.core.v1.api.loader.Loader;
 import org.jd.core.v1.api.printer.Printer;
@@ -27,10 +30,24 @@ public class ClassFileToJavaSourceDecompiler implements Decompiler {
     protected LayoutFragmentProcessor layouter = new LayoutFragmentProcessor();
     protected JavaFragmentToTokenProcessor tokenizer = new JavaFragmentToTokenProcessor();
     protected WriteTokenProcessor writer = new WriteTokenProcessor();
+    private Printer mPrinter;
+
+    @Nullable
+    public Printer getPrinter(){
+        return mPrinter;
+    }
+
+    @NotNull
+    public String getPrinterStr(){
+        if (getPrinter()==null){
+            return "";
+        }
+        return getPrinter().toString();
+    }
 
     public void decompile(Loader loader, Printer printer, String internalName) throws Exception {
         Message message = new Message();
-
+        this.mPrinter=printer;
         message.setHeader("mainInternalTypeName", internalName);
         message.setHeader("loader", loader);
         message.setHeader("printer", printer);

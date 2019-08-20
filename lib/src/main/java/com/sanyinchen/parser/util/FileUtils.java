@@ -162,7 +162,7 @@ public final class FileUtils {
 
     public static void jarDecompress(@NotNull String jarPath, @NotNull String outputPath) {
         File jarDir = new File(jarPath);
-        if (!jarDir.exists() || jarDir.isFile()) {
+        if (!jarDir.exists() || !jarDir.isFile()) {
             return;
         }
         if (!outputPath.endsWith(File.separator)) {
