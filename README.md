@@ -5,15 +5,15 @@ Dependency-parser is a java class dependency parser based on jd-core and antlr4.
 You can get what class has been missed from jars .  
 For example:  
 There are two lib:lib-a and lib-b  
-lib-a includes:
-a_A.java
-a_B.java
-a_C.java
+lib-a includes:  
+a_A.java  
+a_B.java  
+a_C.java  
 
-lib-b includes:
-b_A.java
-b_B.java
-b_C.java
+lib-b includes:  
+b_A.java  
+b_B.java  
+b_C.java  
 
 and the gradle of lib-a is :
 ```
