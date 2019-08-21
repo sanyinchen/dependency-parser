@@ -25,8 +25,8 @@ dependencies {
 }
 
 ```
-So , lib-a depend lib-b but not include any class of lib-a , if you run
-some method of lib-a . Maybe you will get find class error .  
+So , lib-a depend lib-b but not be compiled in lib-a (compileOnly), if you run
+some method of lib-a or load lib-a's method in a new classLoader . Maybe you will get find class error .  
 
 Based on this case , we can use Dependency-parser to parse what class has been missed .
 
