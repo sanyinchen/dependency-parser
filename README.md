@@ -82,9 +82,5 @@ you need to check : 0 group
 
 
 ## How to use dependency-parser ?
-you need to clone this project and add 'jd-core' and 'lib' to your own project.
+you need to clone this project and add 'lib' to your own project.
 
-## TODO
-1. if ```com.test.A``` and ```com.test.B``` is not in one jar and has scanned 
-some class is ```com.test``` , it will miss one of ```com.test.A``` and ```com.test.B```
-2. if the lib is very big , it will cost you too much time .

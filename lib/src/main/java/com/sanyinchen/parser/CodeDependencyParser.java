@@ -55,8 +55,9 @@ public class CodeDependencyParser {
 
             for (String jarPath : jarPaths) {
                 File jar = new File(jarPath);
-                if (!jar.exists() || !jar.isFile()) {
-                    throw new IllegalArgumentException("jar path is not valid");
+                if (!jar.exists() || !jar.isFile() || !jar.getPath().endsWith(".jar")) {
+                    // throw new IllegalArgumentException("jar path is not valid");
+                    System.out.println(jar.getPath() + " is not a jsr , skip ");
                 }
                 FileUtils.jarDecompress(jarPath, classesDir.getPath());
                 classesPath.addAll(FileFinderUtil.createNewFinder(new File(jarFilesPath).getCanonicalPath())
