@@ -153,24 +153,19 @@ public class CodeDependencyParser {
             if (res == null || res.length() < 10) {
                 Thread.currentThread().interrupt();
             }
-            String astFile = "";
-            try {
-                astFile = getAbsClassPath(astDir, classFile).replace(".class", ".json");
-                // todo cache
-                FileUtils.delExistedFile(astFile);
-                FileUtils.writeStringToFile(res, astFile);
-            } catch (FileExistsException | FileNotFoundException e) {
-                // e.printStackTrace();
-            }
+            // String astFile = getAbsClassPath(astDir, classFile).replace(".class", ".json");
+            // todo cache
+//                FileUtils.delExistedFile(astFile);
+//                FileUtils.writeStringToFile(res, astFile);
             JavaTree javaTree = new JavaTree(res);
-            Pair<ParseTreeNode, Set<ParseTreeNode>> packages = javaTree.getPackageNode();
-            ParseTreeNode packageNode = packages.first;
+            Pair<String, Set<ParseTreeNode>> packages = javaTree.getPackageNode();
+            String packagName = packages.first;
             Set<ParseTreeNode> importPackageNodes = packages.second;
             Set<String> importPackages = new HashSet<>();
             for (ParseTreeNode parseTreeNode : importPackageNodes) {
                 importPackages.add(JavaNodeUtil.INS.getEscapeImportPackageName(parseTreeNode));
             }
-            return new Response(importPackages, JavaNodeUtil.INS.getEscapePackageName(packageNode));
+            return new Response(importPackages, packagName);
         }
 
         private boolean contains(@NotNull Object[] packages, @NotNull String packageName) {

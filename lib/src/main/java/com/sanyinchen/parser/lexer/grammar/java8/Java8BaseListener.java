@@ -1,4 +1,4 @@
-package com.sanyinchen.parser.lexer.grammar.java8;
+package com.sanyinchen.parser.lexer.grammar.java8;// Generated from ./Java8.g4 by ANTLR 4.7.2
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -514,6 +514,18 @@ public class Java8BaseListener implements Java8Listener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitNormalClassDeclaration(Java8Parser.NormalClassDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterTypeNameDeclaration(Java8Parser.TypeNameDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTypeNameDeclaration(Java8Parser.TypeNameDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -1222,6 +1234,18 @@ public class Java8BaseListener implements Java8Listener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitInterfaceModifier(Java8Parser.InterfaceModifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRootModifier(Java8Parser.RootModifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRootModifier(Java8Parser.RootModifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

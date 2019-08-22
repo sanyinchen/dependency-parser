@@ -1,4 +1,4 @@
-package com.sanyinchen.parser.lexer.grammar.java8;
+package com.sanyinchen.parser.lexer.grammar.java8;// Generated from ./Java8.g4 by ANTLR 4.7.2
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -426,6 +426,16 @@ public interface Java8Listener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitNormalClassDeclaration(Java8Parser.NormalClassDeclarationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link Java8Parser#typeNameDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterTypeNameDeclaration(Java8Parser.TypeNameDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Java8Parser#typeNameDeclaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitTypeNameDeclaration(Java8Parser.TypeNameDeclarationContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link Java8Parser#classModifier}.
 	 * @param ctx the parse tree
@@ -1016,6 +1026,16 @@ public interface Java8Listener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitInterfaceModifier(Java8Parser.InterfaceModifierContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link Java8Parser#rootModifier}.
+	 * @param ctx the parse tree
+	 */
+	void enterRootModifier(Java8Parser.RootModifierContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Java8Parser#rootModifier}.
+	 * @param ctx the parse tree
+	 */
+	void exitRootModifier(Java8Parser.RootModifierContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link Java8Parser#extendsInterfaces}.
 	 * @param ctx the parse tree
