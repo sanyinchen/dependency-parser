@@ -82,5 +82,9 @@ you need to check : 0 group
 
 
 ## How to use dependency-parser ?
-you need to clone this project and add 'lib' to your own project.
+1. using as sdk
+    1. you need to clone this project and add 'lib' to your own project.  
+    2. [download release jar](https://github.com/sanyinchen/dependency-parser/releases) and add your project
+2. using jar
+    1. java -jar ./lib-1.0-release.jar ./xxxyour jar list
 
